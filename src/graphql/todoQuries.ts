@@ -2,14 +2,14 @@ import { gql } from '@apollo/client';
 
 // Query to fetch todos
 export const GET_TODOS = gql`
-  query GetTodos {
-    todos {
+  query GetAllTodos($email: String!) {
+    getAllTodos(email: $email) {
       id
       title
       description
       status
-      currentDate
-      updateDT
+      createdDt
+      updateDt
     }
   }
 `;
@@ -22,6 +22,8 @@ export const CREATE_OR_UPDATE_TODO = gql`
       title
       description
       status
+      createdDt
+      updateDt
     }
   }
 `;
