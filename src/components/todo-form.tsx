@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { OnAddTodo } from '../types';
 
-export default function NewTodo({ handler }: OnAddTodo) {
+const NewTodo = ({ handler }: OnAddTodo) => {
   //Manage input fields
   const InputRef = useRef<HTMLInputElement>(null);
   const DesInputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +40,6 @@ export default function NewTodo({ handler }: OnAddTodo) {
     const enteredDescription = DesInputRef.current!.value;
 
     //Manage the error handling
-    const updatedDT = null;
     switch (true) {
       case enteredText === '' || enteredDescription === '':
         setErrorMessage('Please fill out both of the fields!');
@@ -58,7 +57,7 @@ export default function NewTodo({ handler }: OnAddTodo) {
         break;
 
       default:
-        handler(enteredText, enteredDescription, currentDate, updatedDT);
+        handler(enteredText, enteredDescription, currentDate, null);
 
         InputRef.current!.value = '';
         DesInputRef.current!.value = '';
@@ -136,4 +135,6 @@ export default function NewTodo({ handler }: OnAddTodo) {
       </Dialog>
     </Container>
   );
-}
+};
+
+export default NewTodo;

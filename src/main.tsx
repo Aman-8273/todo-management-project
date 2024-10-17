@@ -9,7 +9,7 @@ const root = ReactDOM.createRoot(
 );
 
 const client = new ApolloClient({
-  uri: 'https://graphqlapi.com/',
+  uri: 'https://b321-2409-40c1-5023-badb-a914-fd50-5db2-d65c.ngrok-free.app/graphql',
   cache: new InMemoryCache(),
 });
 

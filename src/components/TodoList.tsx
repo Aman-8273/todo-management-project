@@ -13,8 +13,12 @@ import {
 import { TodoListProps } from '../types';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import { useMutation, useQuery } from '@apollo/client';
+import { CREATE_OR_UPDATE_TODO, GET_TODOS } from '../graphql/todoQuries';
 
 const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
+  console.log(items);
+
   //Manage Form data
   const initialValue = {
     editIndex: null as string | null,
@@ -23,34 +27,62 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
   };
   const [formValue, setFormValue] = useState(initialValue);
 
-  //Handling status weather task completed or not
-  const [completedTask, setCompletedTask] = useState<{
-    [key: string]: boolean;
-  }>({});
+  //TODO
+
+  // Fetch todos from the backend
+  const { refetch } = useQuery(GET_TODOS, {
+    fetchPolicy: 'network-only', //  always fetch the new data
+  });
+
+  const [updateStatus] = useMutation(CREATE_OR_UPDATE_TODO);
+
+  const handleStatusChange = async (
+    id: string,
+    currentStatus: string,
+    title: string,
+    description: string
+  ) => {
+    const newStatus = currentStatus === 'PENDING' ? 'COMPLETED' : 'PENDING';
+
+    try {
+      await updateStatus({
+        variables: {
+          input: {
+            id,
+            status: newStatus,
+            email: 'krips@mail.com',
+            title,
+            description,
+          },
+        },
+      });
+      refetch();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
+  };
 
   //handle edit functionality
-  const onClickEdit = (id: string, currentText: string, currentDes: string) => {
+  const onClickEdit = (
+    id: string,
+    currentTitle: string,
+    currentDes: string
+  ) => {
     setFormValue({
       editIndex: id,
-      editedTask: currentText,
+      editedTask: currentTitle,
       editedDes: currentDes,
     });
   };
 
   //handling todo save functionality
   const handleSave = (id: string) => {
-    const updatedDate = new Date();
-    handleEdit(id, formValue.editedTask, formValue.editedDes, updatedDate);
+    const updatedDt = new Date();
+    handleEdit(id, formValue.editedTask, formValue.editedDes, updatedDt);
     setFormValue(initialValue);
   };
 
-  //handling status (Task completed or not)
-  const handleStatus = (id: string) => {
-    setCompletedTask((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
+  // if (!data) return <Typography>Loading....</Typography>;
 
   return (
     <Box sx={{ display: 'flex', px: 2, maxWidth: '100vh', margin: '5px auto' }}>
@@ -122,18 +154,17 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     sx={{
                       fontWeight: 'bold',
                       fontSize: '1.4rem',
-                      textDecoration: completedTask[item.id]
-                        ? 'line-through'
-                        : 'none',
+                      textDecoration:
+                        item.status === 'COMPLETED' ? 'line-through' : 'none',
                     }}
                   >
-                    {item.text}
+                    {item.title}
                   </Typography>
 
                   <Box sx={{ display: 'flex', gap: '0.5rem' }}>
                     <Button
                       onClick={() =>
-                        onClickEdit(item.id, item.text, item.description)
+                        onClickEdit(item.id, item.title, item.description)
                       }
                     >
                       <EditRoundedIcon />
@@ -155,9 +186,8 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     variant='caption'
                     sx={{
                       fontSize: '1rem',
-                      textDecoration: completedTask[item.id]
-                        ? 'line-through'
-                        : 'none',
+                      textDecoration:
+                        item.status === 'COMPLETED' ? 'line-through' : 'none',
                     }}
                   >
                     {item.description}
@@ -179,8 +209,15 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     label='Completed'
                     control={
                       <Checkbox
-                        checked={completedTask[item.id] || false}
-                        onChange={() => handleStatus(item.id)}
+                        checked={item.status === 'COMPLETED'}
+                        onChange={() =>
+                          handleStatusChange(
+                            item.id,
+                            item.status,
+                            item.title,
+                            item.description
+                          )
+                        }
                       />
                     }
                   />
@@ -194,9 +231,11 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                         borderRadius: '5px',
                       }}
                     >
-                      {item.currentDate.toLocaleDateString()}
+                      {item.createdDt
+                        ? new Date(item.createdDt).toLocaleDateString()
+                        : null}
                     </Typography>
-                    {item.updatedDate && (
+                    {item.updatedDt && (
                       <Typography
                         sx={{
                           fontSize: '0.8rem',
@@ -206,7 +245,9 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                           borderRadius: '5px',
                         }}
                       >
-                        {item.updatedDate?.toLocaleDateString()}
+                        {item.updatedDt
+                          ? new Date(item.updatedDt).toLocaleDateString()
+                          : null}
                       </Typography>
                     )}
                   </Box>
@@ -216,7 +257,6 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
           </ListItem>
         ))}
       </List>
-      g
     </Box>
   );
 };
