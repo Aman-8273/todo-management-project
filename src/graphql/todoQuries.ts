@@ -10,6 +10,7 @@ export const GET_TODOS = gql`
       status
       createdDt
       updateDt
+      # isUpdated
     }
   }
 `;

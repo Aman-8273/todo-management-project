@@ -13,7 +13,7 @@ const Home = () => {
   //get token after user validation and store in localstorage
   const onSuccess = (credentialResponse: CredentialResponse) => {
     try {
-      // console.log(credentialResponse?.credential);
+      console.log(credentialResponse?.credential);
       if (credentialResponse?.credential) {
         const decoded: DecodedToken = jwtDecode<DecodedToken>(
           credentialResponse.credential
@@ -102,7 +102,7 @@ const Home = () => {
           />
           <img
             src={todoImage}
-            alt='Login Image'
+            alt='Login illustration'
             style={{
               marginTop: '1rem',
               width: '70%',

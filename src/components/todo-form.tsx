@@ -39,7 +39,7 @@ const NewTodo = ({ handler }: OnAddTodo) => {
     const enteredText = InputRef.current!.value;
     const enteredDescription = DesInputRef.current!.value;
 
-    //Manage the error handling
+    //Manage the errors
     switch (true) {
       case enteredText === '' || enteredDescription === '':
         setErrorMessage('Please fill out both of the fields!');
@@ -57,7 +57,7 @@ const NewTodo = ({ handler }: OnAddTodo) => {
         break;
 
       default:
-        handler(enteredText, enteredDescription, currentDate, null);
+        handler(enteredText, enteredDescription, currentDate);
 
         InputRef.current!.value = '';
         DesInputRef.current!.value = '';

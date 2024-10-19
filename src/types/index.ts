@@ -7,17 +7,12 @@ export interface Todo {
   description: string;
   status: string;
   createdDt: Date;
-  updatedDt: Date | null;
+  updateDt: Date | null;
 }
 
 //add todo data
 export interface TodoAddHandler {
-  (
-    title: string,
-    description: string,
-    date: Date,
-    updatedDt: Date | null
-  ): void;
+  (title: string, description: string, date: Date): void;
 }
 
 //edit todo
@@ -26,7 +21,7 @@ export interface TodoEditHandler {
     id: string,
     editedTask: string,
     editedDes: string,
-    updatedDt: Date | null
+    updateDt: Date | null
   ): void;
 }
 
@@ -43,8 +38,8 @@ export interface OnAddTodo {
   handler: (
     title: string,
     Des: string,
-    date: Date,
-    updatedDt: Date | null
+    date: Date
+    // updateDt: Date | null
   ) => void;
 }
 
@@ -56,14 +51,14 @@ export interface TodoListProps {
     description: string;
     status: string;
     createdDt: Date;
-    updatedDt: Date | null;
+    updateDt: Date | null;
   }[]; // array of objects
   onDeleteTodos: (id: string) => void;
   handleEdit: (
     id: string,
     editedTask: string,
     editedDes: string,
-    updatedDt: Date | null
+    updateDt: Date | null
   ) => void;
 }
 

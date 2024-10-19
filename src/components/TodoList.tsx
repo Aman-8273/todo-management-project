@@ -27,22 +27,25 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
   };
   const [formValue, setFormValue] = useState(initialValue);
 
-  //TODO
-
-  // Fetch todos from the backend
+  // Fetch todos from api
   const { refetch } = useQuery(GET_TODOS, {
     fetchPolicy: 'network-only', //  always fetch the new data
   });
 
   const [updateStatus] = useMutation(CREATE_OR_UPDATE_TODO);
 
+  //Manage status (completed or pending)
   const handleStatusChange = async (
     id: string,
     currentStatus: string,
     title: string,
     description: string
   ) => {
-    const newStatus = currentStatus === 'PENDING' ? 'COMPLETED' : 'PENDING';
+    enum status {
+      P = 'PENDING',
+      C = 'COMPLETED',
+    }
+    const newStatus = currentStatus === status.P ? status.C : status.P;
 
     try {
       await updateStatus({
@@ -76,19 +79,23 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
   };
 
   //handling todo save functionality
-  const handleSave = (id: string) => {
+  const handleSave = async (id: string) => {
     const updatedDt = new Date();
+
     handleEdit(id, formValue.editedTask, formValue.editedDes, updatedDt);
     setFormValue(initialValue);
   };
 
-  // if (!data) return <Typography>Loading....</Typography>;
+  //sort todos by date (return positive = swap, negative = same order, 0 = same order)
+  const sortedItems = [...items].sort(
+    (a, b) => new Date(b.createdDt).getTime() - new Date(a.createdDt).getTime()
+  ); // Turn your strings into dates, and convert time into miliseconds
 
   return (
     <Box sx={{ display: 'flex', px: 2, maxWidth: '100vh', margin: '5px auto' }}>
       {/* todo-task-list */}
       <List>
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <ListItem
             key={item.id}
             sx={{
@@ -235,7 +242,8 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                         ? new Date(item.createdDt).toLocaleDateString()
                         : null}
                     </Typography>
-                    {item.updatedDt && (
+
+                    {item.updateDt !== item.createdDt && (
                       <Typography
                         sx={{
                           fontSize: '0.8rem',
@@ -245,8 +253,8 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                           borderRadius: '5px',
                         }}
                       >
-                        {item.updatedDt
-                          ? new Date(item.updatedDt).toLocaleDateString()
+                        {item.updateDt
+                          ? new Date(item.updateDt).toLocaleDateString()
                           : null}
                       </Typography>
                     )}

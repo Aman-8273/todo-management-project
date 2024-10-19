@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Container } from '@mui/material';
 import NewTodo from './todo-form';
 import TodoList from '../components/TodoList';
@@ -11,17 +11,17 @@ import {
   CREATE_OR_UPDATE_TODO,
   DELETE_TODO,
 } from '../graphql/todoQuries';
-import { useEffect } from 'react';
 
 const TodoPage = () => {
-  //TODO
-  const email = 'krips@mail.com'; // Hardcoded email
-  const { data, loading, error, refetch } = useQuery(GET_TODOS, {
-    variables: { email },
-  }); // Fetch todos
+  const token = localStorage.getItem('token');
+  const emailData = token ? JSON.parse(token) : null;
 
-  const [createOrUpdateTodo] = useMutation(CREATE_OR_UPDATE_TODO); // Mutation to create/update
-  const [deleteTodo] = useMutation(DELETE_TODO); // Mutation to delete todos
+  const { data, loading, error, refetch } = useQuery(GET_TODOS, {
+    variables: { email: emailData.email },
+  });
+
+  const [createOrUpdateTodo] = useMutation(CREATE_OR_UPDATE_TODO);
+  const [deleteTodo] = useMutation(DELETE_TODO);
 
   // AddTodo
   const [addTodo, setAddTodo] = useState<Todo[]>([]);
@@ -31,97 +31,80 @@ const TodoPage = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [TodosPerPage] = useState<number>(4);
 
-  //TODO
+  const indexOfLastTodo = currentPage * TodosPerPage;
+  const indexOfFirstTodo = indexOfLastTodo - TodosPerPage;
+  const currentTodos = addTodo.slice(indexOfFirstTodo, indexOfLastTodo);
+
   useEffect(() => {
     if (data) {
       setAddTodo(data.getAllTodos);
     }
   }, [data]);
 
-  const indexOfLastTodo = currentPage * TodosPerPage;
-  const indexOfFirstTodo = indexOfLastTodo - TodosPerPage;
-  const currentTodos = addTodo.slice(indexOfFirstTodo, indexOfLastTodo);
-
-  //add new todo's
-  const todoAddHandler: TodoAddHandler = async (
-    title,
-    Des,
-    date,
-    updatedDt
-  ) => {
-    // setAddTodo((prevTodos) => [
-    //   {
-    //     id: Math.random().toString(),
-    //     text: text,
-    //     description: Des,
-    //     currentDate: date,
-    //     updatedDate: updatedDT,
-    //   },
-    //   ...prevTodos,
-    // ]);
-
-    //TODO
-    await createOrUpdateTodo({
-      variables: {
-        input: {
-          email: 'krips@mail.com',
-          title: title,
-          description: Des,
-          createdDt: date,
-          status: 'PENDING',
-          updateDt: updatedDt,
-        },
-      },
-    });
-    refetch();
+  //add new tasks
+  const todoAddHandler: TodoAddHandler = (title, Des, date) => {
+    (async () => {
+      try {
+        await createOrUpdateTodo({
+          variables: {
+            input: {
+              email: emailData.email,
+              title,
+              description: Des,
+              createdDt: date,
+              status: 'PENDING',
+            },
+          },
+        });
+        await refetch();
+      } catch (err) {
+        console.error('Error adding todo:', err);
+      }
+    })();
   };
 
-  //Handling edit functionality
-  const handleEdit: TodoEditHandler = async (
-    id,
-    editedTask,
-    editedDes,
-    updatedDt
-  ) => {
-    // const updatedTask = addTodo.map((todo) =>
-    //   todo.id === id
-    //     ? {
-    //         ...todo,
-    //         text: editedTask,
-    //         description: editedDes,
-    //         updatedDate: updatedDT,
-    //       }
-    //     : todo
-    // );
-    // setAddTodo(updatedTask);
-
-    //TODO
-    await createOrUpdateTodo({
-      variables: {
-        input: {
-          id,
-          email: 'krips@mail.com',
-          title: editedTask,
-          description: editedDes,
-          updateDt: updatedDt,
-        },
-      },
-    });
-    refetch();
+  //Edit Todotasks
+  const handleEdit: TodoEditHandler = (id, editedTask, editedDes, updateDt) => {
+    (async () => {
+      try {
+        await createOrUpdateTodo({
+          variables: {
+            input: {
+              id,
+              email: emailData.email,
+              title: editedTask,
+              description: editedDes,
+              updateDt,
+            },
+          },
+        });
+        await refetch();
+      } catch (err) {
+        console.error('Error editing todo:', err);
+      }
+    })();
   };
 
-  //handling delete functionality
-  const TodoDeleteHandler = async (todoId: string) => {
-    // setAddTodo((prevTodos) => {
-    //   return prevTodos.filter((todo) => todo.id !== todoId);
-    // });
+  //Delete TodoTasks
+  const TodoDeleteHandler = (todoId: string) => {
+    (async () => {
+      try {
+        await deleteTodo({ variables: { id: todoId } });
 
-    //TODO
-    await deleteTodo({ variables: { id: todoId } });
-    refetch();
+        const { data: newData } = await refetch();
+        const filteredTodos = newData?.getAllTodos.filter(
+          (todo: Todo) => todo.status !== 'ARCHIVED'
+        );
+
+        if (filteredTodos) {
+          setAddTodo(filteredTodos);
+        }
+      } catch (err) {
+        console.error('Error deleting todo:', err);
+      }
+    })();
   };
 
-  //TODO
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error {error.message}!</p>;
 
@@ -130,7 +113,7 @@ const TodoPage = () => {
       maxWidth='lg'
       sx={{ mt: 4, ml: 8 }}
     >
-      {/* todo-form */}
+      {/* todoform */}
       <Box
         sx={{
           display: 'flex',
@@ -151,6 +134,7 @@ const TodoPage = () => {
           />
         </Box>
       </Box>
+
       {/* Pagination */}
       <TodoPagination
         totalTodos={addTodo.length}
