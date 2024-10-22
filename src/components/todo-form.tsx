@@ -1,21 +1,11 @@
 import React, { useRef, useState } from 'react';
 import AddTaskRoundedIcon from '@mui/icons-material/AddTaskRounded';
-import {
-  Box,
-  Button,
-  Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Container, FormControl, TextField } from '@mui/material';
 import { OnAddTodo } from '../types';
+import ErrorDialog from './error-dialog';
 
-export default function NewTodo({ handler }: OnAddTodo) {
-  //Manage input fields
+const NewTodo = ({ handler }: OnAddTodo) => {
+  //Managing input fields
   const InputRef = useRef<HTMLInputElement>(null);
   const DesInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,15 +22,14 @@ export default function NewTodo({ handler }: OnAddTodo) {
   const onAddTodo = (event: React.FormEvent) => {
     event.preventDefault();
 
-    //Set current date to todos
+    //Setting current date to todos
     const currentDate = new Date();
 
-    //get title & description information
+    //Getting title & description information
     const enteredText = InputRef.current!.value;
     const enteredDescription = DesInputRef.current!.value;
 
-    //Manage the error handling
-    const updatedDT = null;
+    //Managing the errors
     switch (true) {
       case enteredText === '' || enteredDescription === '':
         setErrorMessage('Please fill out both of the fields!');
@@ -58,7 +47,7 @@ export default function NewTodo({ handler }: OnAddTodo) {
         break;
 
       default:
-        handler(enteredText, enteredDescription, currentDate, updatedDT);
+        handler(enteredText, enteredDescription, currentDate);
 
         InputRef.current!.value = '';
         DesInputRef.current!.value = '';
@@ -71,7 +60,7 @@ export default function NewTodo({ handler }: OnAddTodo) {
       maxWidth='lg'
       sx={{ mt: 2 }}
     >
-      {/* todo-form */}
+      {/* todoform */}
       <Box sx={{ width: '35rem' }}>
         <form onSubmit={onAddTodo}>
           <Box sx={{ mb: 2 }}>
@@ -112,28 +101,13 @@ export default function NewTodo({ handler }: OnAddTodo) {
       </Box>
 
       {/* Error handling */}
-      <Dialog
+      <ErrorDialog
         open={open}
+        message={errorMessage}
         onClose={handleClose}
-        disableEnforceFocus
-        closeAfterTransition={false}
-        aria-labelledby='alert-dialog-title'
-        aria-describedby='alert-dialog-description'
-      >
-        <DialogTitle id='alert-dialog-title'>Error</DialogTitle>
-        <DialogContent>
-          <Typography id='alert-dialog-description'>{errorMessage}</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            aria-label='this is area label'
-            onClick={handleClose}
-            autoFocus
-          >
-            Ok
-          </Button>
-        </DialogActions>
-      </Dialog>
+      />
     </Container>
   );
-}
+};
+
+export default NewTodo;

@@ -13,50 +13,91 @@ import {
 import { TodoListProps } from '../types';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import { useMutation, useQuery } from '@apollo/client';
+import { CREATE_OR_UPDATE_TODO, GET_TODOS } from '../queries';
 
 const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
+  //Getting token from localStorage and fetch email from it
+  const token = localStorage.getItem('token');
+  const emailData = token ? JSON.parse(token) : null;
+
   //Manage Form data
   const initialValue = {
     editIndex: null as string | null,
     editedTask: '',
-    editedDes: '',
+    editedDesc: '',
   };
   const [formValue, setFormValue] = useState(initialValue);
 
-  //Handling status weather task completed or not
-  const [completedTask, setCompletedTask] = useState<{
-    [key: string]: boolean;
-  }>({});
+  // Fetch todos from api
+  const { refetch } = useQuery(GET_TODOS, {
+    fetchPolicy: 'network-only', //  always fetch the new data
+  });
+
+  const [updateStatus] = useMutation(CREATE_OR_UPDATE_TODO);
+
+  //Managing status (completed or pending)
+  const handleStatusChange = async (
+    id: string,
+    currentStatus: string,
+    title: string,
+    description: string
+  ) => {
+    enum status {
+      P = 'PENDING',
+      C = 'COMPLETED',
+    }
+    const newStatus = currentStatus === status.P ? status.C : status.P;
+
+    try {
+      await updateStatus({
+        variables: {
+          input: {
+            id,
+            status: newStatus,
+            email: emailData.email,
+            title,
+            description,
+          },
+        },
+      });
+      refetch();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
+  };
 
   //handle edit functionality
-  const onClickEdit = (id: string, currentText: string, currentDes: string) => {
+  const onClickEdit = (
+    id: string,
+    currentTitle: string,
+    currentDesc: string
+  ) => {
     setFormValue({
       editIndex: id,
-      editedTask: currentText,
-      editedDes: currentDes,
+      editedTask: currentTitle,
+      editedDesc: currentDesc,
     });
   };
 
-  //handling todo save functionality
-  const handleSave = (id: string) => {
-    const updatedDate = new Date();
-    handleEdit(id, formValue.editedTask, formValue.editedDes, updatedDate);
+  //handling TodoSave functionality
+  const handleSave = async (id: string) => {
+    const updatedDt = new Date();
+
+    handleEdit(id, formValue.editedTask, formValue.editedDesc, updatedDt);
     setFormValue(initialValue);
   };
 
-  //handling status (Task completed or not)
-  const handleStatus = (id: string) => {
-    setCompletedTask((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
+  //sort todos by date (return positive = swap, negative = same order, 0 = same order)
+  const sortedItems = [...items].sort(
+    (a, b) => new Date(b.createdDt).getTime() - new Date(a.createdDt).getTime()
+  ); // Turn your strings into dates, and convert time into miliseconds
 
   return (
     <Box sx={{ display: 'flex', px: 2, maxWidth: '100vh', margin: '5px auto' }}>
-      {/* todo-task-list */}
+      {/* todoTask-list */}
       <List>
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <ListItem
             key={item.id}
             sx={{
@@ -69,7 +110,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
               mb: 1,
             }}
           >
-            {/* Update todo's */}
+            {/* Update todos */}
             {formValue.editIndex === item.id ? (
               <Box
                 sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
@@ -91,12 +132,12 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                   variant='outlined'
                   multiline
                   maxRows={4}
-                  value={formValue.editedDes}
+                  value={formValue.editedDesc}
                   sx={{ marginRight: 2, mb: 2, width: '30rem' }}
                   onChange={(e) =>
                     setFormValue((prev) => ({
                       ...prev,
-                      editedDes: e.target.value,
+                      editedDesc: e.target.value,
                     }))
                   }
                 />
@@ -122,18 +163,17 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     sx={{
                       fontWeight: 'bold',
                       fontSize: '1.4rem',
-                      textDecoration: completedTask[item.id]
-                        ? 'line-through'
-                        : 'none',
+                      textDecoration:
+                        item.status === 'COMPLETED' ? 'line-through' : 'none',
                     }}
                   >
-                    {item.text}
+                    {item.title}
                   </Typography>
 
                   <Box sx={{ display: 'flex', gap: '0.5rem' }}>
                     <Button
                       onClick={() =>
-                        onClickEdit(item.id, item.text, item.description)
+                        onClickEdit(item.id, item.title, item.description)
                       }
                     >
                       <EditRoundedIcon />
@@ -155,9 +195,8 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     variant='caption'
                     sx={{
                       fontSize: '1rem',
-                      textDecoration: completedTask[item.id]
-                        ? 'line-through'
-                        : 'none',
+                      textDecoration:
+                        item.status === 'COMPLETED' ? 'line-through' : 'none',
                     }}
                   >
                     {item.description}
@@ -166,7 +205,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
 
                 <Divider sx={{ width: '100%', my: 0.5 }} />
 
-                {/* Manage todo status and Dates */}
+                {/* Manage todoStatus and Dates */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -179,8 +218,15 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     label='Completed'
                     control={
                       <Checkbox
-                        checked={completedTask[item.id] || false}
-                        onChange={() => handleStatus(item.id)}
+                        checked={item.status === 'COMPLETED'}
+                        onChange={() =>
+                          handleStatusChange(
+                            item.id,
+                            item.status,
+                            item.title,
+                            item.description
+                          )
+                        }
                       />
                     }
                   />
@@ -194,9 +240,12 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                         borderRadius: '5px',
                       }}
                     >
-                      {item.currentDate.toLocaleDateString()}
+                      {item.createdDt
+                        ? new Date(item.createdDt).toLocaleDateString()
+                        : null}
                     </Typography>
-                    {item.updatedDate && (
+
+                    {item.updateDt !== item.createdDt && (
                       <Typography
                         sx={{
                           fontSize: '0.8rem',
@@ -206,7 +255,9 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                           borderRadius: '5px',
                         }}
                       >
-                        {item.updatedDate?.toLocaleDateString()}
+                        {item.updateDt
+                          ? new Date(item.updateDt).toLocaleDateString()
+                          : null}
                       </Typography>
                     )}
                   </Box>
@@ -216,7 +267,6 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
           </ListItem>
         ))}
       </List>
-      g
     </Box>
   );
 };

@@ -4,36 +4,31 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom';
-import { Box } from '@mui/material';
-import Header from './components/Header';
+import Header from './components/navbar';
 import Home from './components/Home';
 import TodoPage from './components/TodoPage';
-import ProtectedRoute from './routing/ProtectedRoute';
+import ProtectedRoute from './routing/protected-route';
 
 const App = () => {
   return (
     <Router>
-      <Box>
-        <Header />
-        <Box sx={{ mt: 4 }}>
-          <Routes>
-            <Route
-              path='/'
-              element={<Home />}
-            />
-            <Route element={<ProtectedRoute />}>
-              <Route
-                path='/todo'
-                element={<TodoPage />}
-              />
-            </Route>
-            <Route
-              path='*'
-              element={<Navigate to='/' />}
-            />{' '}
-          </Routes>
-        </Box>
-      </Box>
+      <Header />
+      <Routes>
+        <Route
+          path='/'
+          element={<Home />}
+        />
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path='/todo'
+            element={<TodoPage />}
+          />
+        </Route>
+        <Route
+          path='*'
+          element={<Navigate to='/' />}
+        />{' '}
+      </Routes>
     </Router>
   );
 };
