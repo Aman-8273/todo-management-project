@@ -3,12 +3,13 @@ import ReactDOM from 'react-dom/client';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import React from 'react';
 import App from './App';
-import { GOOGLE_KEY, GRAPHQL_KEY } from './keys';
+import { GOOGLE_KEY, GRAPHQL_KEY } from './constants';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
+//Defining graphql key
 const client = new ApolloClient({
   uri: GRAPHQL_KEY!,
   cache: new InMemoryCache(),
@@ -16,7 +17,7 @@ const client = new ApolloClient({
 
 root.render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_KEY!}>
+    <GoogleOAuthProvider clientId={GOOGLE_KEY}>
       <ApolloProvider client={client}>
         <App />
       </ApolloProvider>

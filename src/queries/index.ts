@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-// Query to fetch todos
+// For fetching todos
 export const GET_TODOS = gql`
   query GetAllTodos($email: String!) {
     getAllTodos(email: $email) {
@@ -15,7 +15,7 @@ export const GET_TODOS = gql`
   }
 `;
 
-// Mutation to create or update a todo
+// Mutation for create or update
 export const CREATE_OR_UPDATE_TODO = gql`
   mutation CreateOrUpdateTodo($input: TodoInput!) {
     createOrUpdateTodo(input: $input) {
@@ -29,7 +29,7 @@ export const CREATE_OR_UPDATE_TODO = gql`
   }
 `;
 
-// Mutation to delete a todo
+// Mutation for delete
 export const DELETE_TODO = gql`
   mutation DeleteTodo($id: ID!) {
     deleteTodo(id: $id)

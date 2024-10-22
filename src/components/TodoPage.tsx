@@ -3,46 +3,45 @@ import { Box, Container } from '@mui/material';
 import NewTodo from './todo-form';
 import TodoList from '../components/TodoList';
 import { Todo, TodoAddHandler, TodoEditHandler } from '../types';
-import TodoPagination from '../components/Pagination';
+import TodoPagination from './Pagination';
 
 import { useQuery, useMutation } from '@apollo/client';
-import {
-  GET_TODOS,
-  CREATE_OR_UPDATE_TODO,
-  DELETE_TODO,
-} from '../graphql/todoQuries';
+import { GET_TODOS, CREATE_OR_UPDATE_TODO, DELETE_TODO } from '../queries';
 
 const TodoPage = () => {
-  const token = localStorage.getItem('token');
-  const emailData = token ? JSON.parse(token) : null;
+  // Managing addTodos
+  const [addTodo, setAddTodo] = useState<Todo[]>([]);
 
-  const { data, loading, error, refetch } = useQuery(GET_TODOS, {
-    variables: { email: emailData.email },
-  });
+  //Handling pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [TodosPerPage] = useState<number>(4);
 
   const [createOrUpdateTodo] = useMutation(CREATE_OR_UPDATE_TODO);
   const [deleteTodo] = useMutation(DELETE_TODO);
 
-  // AddTodo
-  const [addTodo, setAddTodo] = useState<Todo[]>([]);
-  // console.log(addTodo);
+  //Getting token from localStorage and fetch email from it
+  const token = localStorage.getItem('token');
+  const emailData = token ? JSON.parse(token) : null;
 
-  //handle pagination
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [TodosPerPage] = useState<number>(4);
+  //Fetching data from api
+  const { data, loading, error, refetch } = useQuery(GET_TODOS, {
+    variables: { email: emailData.email },
+  });
 
+  //Handling pagination starting index, last index and shows the todos
   const indexOfLastTodo = currentPage * TodosPerPage;
   const indexOfFirstTodo = indexOfLastTodo - TodosPerPage;
   const currentTodos = addTodo.slice(indexOfFirstTodo, indexOfLastTodo);
 
+  //Setting api data to state
   useEffect(() => {
     if (data) {
       setAddTodo(data.getAllTodos);
     }
   }, [data]);
 
-  //add new tasks
-  const todoAddHandler: TodoAddHandler = (title, Des, date) => {
+  //Add new tasks
+  const todoAddHandler: TodoAddHandler = (title, Desc, date) => {
     (async () => {
       try {
         await createOrUpdateTodo({
@@ -50,7 +49,7 @@ const TodoPage = () => {
             input: {
               email: emailData.email,
               title,
-              description: Des,
+              description: Desc,
               createdDt: date,
               status: 'PENDING',
             },
@@ -64,7 +63,12 @@ const TodoPage = () => {
   };
 
   //Edit Todotasks
-  const handleEdit: TodoEditHandler = (id, editedTask, editedDes, updateDt) => {
+  const handleEdit: TodoEditHandler = (
+    id,
+    editedTask,
+    editedDesc,
+    updateDt
+  ) => {
     (async () => {
       try {
         await createOrUpdateTodo({
@@ -73,7 +77,7 @@ const TodoPage = () => {
               id,
               email: emailData.email,
               title: editedTask,
-              description: editedDes,
+              description: editedDesc,
               updateDt,
             },
           },

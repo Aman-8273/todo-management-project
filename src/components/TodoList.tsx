@@ -14,16 +14,18 @@ import { TodoListProps } from '../types';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import { useMutation, useQuery } from '@apollo/client';
-import { CREATE_OR_UPDATE_TODO, GET_TODOS } from '../graphql/todoQuries';
+import { CREATE_OR_UPDATE_TODO, GET_TODOS } from '../queries';
 
 const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
-  console.log(items);
+  //Getting token from localStorage and fetch email from it
+  const token = localStorage.getItem('token');
+  const emailData = token ? JSON.parse(token) : null;
 
   //Manage Form data
   const initialValue = {
     editIndex: null as string | null,
     editedTask: '',
-    editedDes: '',
+    editedDesc: '',
   };
   const [formValue, setFormValue] = useState(initialValue);
 
@@ -34,7 +36,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
 
   const [updateStatus] = useMutation(CREATE_OR_UPDATE_TODO);
 
-  //Manage status (completed or pending)
+  //Managing status (completed or pending)
   const handleStatusChange = async (
     id: string,
     currentStatus: string,
@@ -53,7 +55,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
           input: {
             id,
             status: newStatus,
-            email: 'krips@mail.com',
+            email: emailData.email,
             title,
             description,
           },
@@ -69,20 +71,20 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
   const onClickEdit = (
     id: string,
     currentTitle: string,
-    currentDes: string
+    currentDesc: string
   ) => {
     setFormValue({
       editIndex: id,
       editedTask: currentTitle,
-      editedDes: currentDes,
+      editedDesc: currentDesc,
     });
   };
 
-  //handling todo save functionality
+  //handling TodoSave functionality
   const handleSave = async (id: string) => {
     const updatedDt = new Date();
 
-    handleEdit(id, formValue.editedTask, formValue.editedDes, updatedDt);
+    handleEdit(id, formValue.editedTask, formValue.editedDesc, updatedDt);
     setFormValue(initialValue);
   };
 
@@ -93,7 +95,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
 
   return (
     <Box sx={{ display: 'flex', px: 2, maxWidth: '100vh', margin: '5px auto' }}>
-      {/* todo-task-list */}
+      {/* todoTask-list */}
       <List>
         {sortedItems.map((item) => (
           <ListItem
@@ -108,7 +110,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
               mb: 1,
             }}
           >
-            {/* Update todo's */}
+            {/* Update todos */}
             {formValue.editIndex === item.id ? (
               <Box
                 sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
@@ -130,12 +132,12 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                   variant='outlined'
                   multiline
                   maxRows={4}
-                  value={formValue.editedDes}
+                  value={formValue.editedDesc}
                   sx={{ marginRight: 2, mb: 2, width: '30rem' }}
                   onChange={(e) =>
                     setFormValue((prev) => ({
                       ...prev,
-                      editedDes: e.target.value,
+                      editedDesc: e.target.value,
                     }))
                   }
                 />
@@ -203,7 +205,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
 
                 <Divider sx={{ width: '100%', my: 0.5 }} />
 
-                {/* Manage todo status and Dates */}
+                {/* Manage todoStatus and Dates */}
                 <Box
                   sx={{
                     display: 'flex',

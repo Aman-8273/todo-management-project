@@ -3,17 +3,16 @@ import { CredentialResponse, GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { Typography, Box } from '@mui/material';
 import { DecodedToken } from '../types/index.js';
-
-//image
-import todoImage from '../assets/png/loginImg.png';
+import todoImage from '../assets/png/login-page.png';
 
 const Home = () => {
   const navigate = useNavigate();
 
-  //get token after user validation and store in localstorage
+  //Getting token after user validation and storing in localstorage
   const onSuccess = (credentialResponse: CredentialResponse) => {
     try {
       console.log(credentialResponse?.credential);
+
       if (credentialResponse?.credential) {
         const decoded: DecodedToken = jwtDecode<DecodedToken>(
           credentialResponse.credential
@@ -43,7 +42,7 @@ const Home = () => {
         margin: '2rem',
       }}
     >
-      {/* about application features  */}
+      {/* About application features  */}
       <Box sx={{ marginTop: '1rem', width: '45rem' }}>
         <Typography
           sx={{
@@ -66,7 +65,7 @@ const Home = () => {
         </Typography>
       </Box>
 
-      {/* Google Login UI */}
+      {/* Google login UI */}
       <Box
         sx={{
           width: '20rem',

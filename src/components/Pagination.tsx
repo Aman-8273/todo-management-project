@@ -7,7 +7,7 @@ const TodoPagination = ({
   currentPage,
   setCurrentPage,
 }: Pagination) => {
-  //total pages and how many number of pages are shown
+  //Total pages and how many number of pages are shown
   const totalPages = Math.ceil(totalTodos / perPageTodos);
   const showPages = 4;
 
@@ -25,7 +25,7 @@ const TodoPagination = ({
     }
   };
 
-  //handle numbering of pages
+  //Handling numbering of pages
   const ShowPages = () => {
     let start = Math.max(1, currentPage - Math.floor(showPages / 2));
     const end = Math.min(totalPages, start + showPages - 1);

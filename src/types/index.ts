@@ -1,6 +1,4 @@
-// ? can be used optional chaining
-
-//Manage todo's
+//Main TodoInterface
 export interface Todo {
   id: string;
   title: string;
@@ -10,20 +8,20 @@ export interface Todo {
   updateDt: Date | null;
 }
 
-//add todo data
-export interface TodoAddHandler {
-  (title: string, description: string, date: Date): void;
-}
+//add data
+export type TodoAddHandler = (
+  title: string,
+  description: string,
+  date: Date
+) => void;
 
-//edit todo
-export interface TodoEditHandler {
-  (
-    id: string,
-    editedTask: string,
-    editedDes: string,
-    updateDt: Date | null
-  ): void;
-}
+//edit
+export type TodoEditHandler = (
+  id: string,
+  editedTask: string,
+  editedDesc: string,
+  updateDt: Date | null
+) => void;
 
 //TodoPage
 export interface TodoPageProps {
@@ -33,31 +31,28 @@ export interface TodoPageProps {
   todos: Todo[];
 }
 
-//add todo  handler functionality
+//todoForm Add TodoHandler functionality
 export interface OnAddTodo {
-  handler: (
-    title: string,
-    Des: string,
-    date: Date
-    // updateDt: Date | null
-  ) => void;
+  handler: (title: string, Desc: string, date: Date) => void;
 }
 
 //TodoList
+interface Items {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  createdDt: Date;
+  updateDt: Date | null;
+}
+
 export interface TodoListProps {
-  items: {
-    id: string;
-    title: string;
-    description: string;
-    status: string;
-    createdDt: Date;
-    updateDt: Date | null;
-  }[]; // array of objects
+  items: Items[]; // array of objects
   onDeleteTodos: (id: string) => void;
   handleEdit: (
     id: string,
     editedTask: string,
-    editedDes: string,
+    editedDesc: string,
     updateDt: Date | null
   ) => void;
 }
@@ -91,4 +86,24 @@ export interface Api {
   description: string;
   createdDt: string;
   updateDt?: string;
+}
+
+// Profile-view
+export interface ProfileViewProps {
+  userData: {
+    name: string;
+    email: string;
+    picture: string;
+  };
+  anchorEl: HTMLElement | null;
+  open: boolean;
+  handleClose: () => void;
+  handleLogout: () => void;
+}
+
+//Error dialog
+export interface ErrorDialogProps {
+  open: boolean;
+  message: string;
+  onClose: () => void;
 }
