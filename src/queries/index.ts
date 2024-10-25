@@ -1,32 +1,42 @@
 import { gql } from '@apollo/client';
 
-// Query to fetch todos
+//Get users
+export const GET_USER_LIST = gql`
+  query GetAllowListByUsers {
+    getAllowListByUsers
+  }
+`;
+
+// For fetching todos
 export const GET_TODOS = gql`
-  query GetTodos {
-    todos {
+  query GetAllTodos {
+    getAllTodos {
       id
       title
       description
       status
-      currentDate
-      updateDT
+      createdDt
+      updateDt
+      # isUpdated
     }
   }
 `;
 
-// Mutation to create or update a todo
+// Mutation for create or update
 export const CREATE_OR_UPDATE_TODO = gql`
-  mutation CreateOrUpdateTodo($input: TodoInput!) {
+  mutation ($input: TodoInput!) {
     createOrUpdateTodo(input: $input) {
       id
       title
       description
       status
+      createdDt
+      updateDt
     }
   }
 `;
 
-// Mutation to delete a todo
+// Mutation for delete
 export const DELETE_TODO = gql`
   mutation DeleteTodo($id: ID!) {
     deleteTodo(id: $id)

@@ -10,52 +10,113 @@ import {
   FormControlLabel,
   Divider,
 } from '@mui/material';
-import { TodoListProps } from '../types';
+import { TodoListProps, SnackBar } from '../types';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import { useMutation, useQuery } from '@apollo/client';
+import SnackbarAlert from '../snackbar';
+import { CREATE_OR_UPDATE_TODO, GET_TODOS } from '../queries';
 
 const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
+  //Snackbar for success
+  const [snackbar, setSnackbar] = useState<SnackBar>({
+    open: false,
+    message: '',
+    severity: 'success',
+    horizontalPosition: 'center',
+    verticalPosition: 'top',
+  });
+
   //Manage Form data
   const initialValue = {
     editIndex: null as string | null,
     editedTask: '',
-    editedDes: '',
+    editedDesc: '',
   };
   const [formValue, setFormValue] = useState(initialValue);
 
-  //Handling status weather task completed or not
-  const [completedTask, setCompletedTask] = useState<{
-    [key: string]: boolean;
-  }>({});
+  // Fetch todos from api
+  const { refetch } = useQuery(GET_TODOS, {
+    fetchPolicy: 'network-only', //  always fetch the new data
+  });
+
+  const [updateStatus] = useMutation(CREATE_OR_UPDATE_TODO);
+
+  //Close snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  //Managing status (completed or pending)
+  const handleStatusChange = async (
+    id: string,
+    currentStatus: string,
+    title: string,
+    description: string
+  ) => {
+    enum status {
+      P = 'PENDING',
+      C = 'COMPLETED',
+    }
+    const newStatus = currentStatus === status.P ? status.C : status.P;
+
+    try {
+      await updateStatus({
+        variables: {
+          input: {
+            id,
+            status: newStatus,
+            title,
+            description,
+          },
+        },
+      });
+      refetch();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
+  };
 
   //handle edit functionality
-  const onClickEdit = (id: string, currentText: string, currentDes: string) => {
+  const onClickEdit = (
+    id: string,
+    currentTitle: string,
+    currentDesc: string
+  ) => {
     setFormValue({
       editIndex: id,
-      editedTask: currentText,
-      editedDes: currentDes,
+      editedTask: currentTitle,
+      editedDesc: currentDesc,
     });
   };
 
-  //handling todo save functionality
-  const handleSave = (id: string) => {
-    const updatedDate = new Date();
-    handleEdit(id, formValue.editedTask, formValue.editedDes, updatedDate);
+  //handling TodoSave functionality
+  const handleSave = async (id: string) => {
+    handleEdit(id, formValue.editedTask, formValue.editedDesc);
     setFormValue(initialValue);
-  };
 
-  //handling status (Task completed or not)
-  const handleStatus = (id: string) => {
-    setCompletedTask((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+    //Sucess message on Edit
+    setSnackbar({
+      open: true,
+      message: 'Todo Edit Successfully!',
+      severity: 'success',
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+    });
   };
 
   return (
-    <Box sx={{ display: 'flex', px: 2, maxWidth: '100vh', margin: '5px auto' }}>
-      {/* todo-task-list */}
-      <List>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        px: { xs: 1, sm: 2 },
+        width: '100%',
+        margin: '5px auto',
+      }}
+    >
+      {/* todoTask-list */}
+      <List sx={{ width: '100%', maxWidth: '1200px', mx: 'auto' }}>
         {items.map((item) => (
           <ListItem
             key={item.id}
@@ -65,20 +126,24 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
               boxShadow: '-2px 3px 7px 0px rgba(179,175,179,1)',
               borderRadius: '10px',
               px: 2,
-              width: '95vh',
+              width: '100%',
               mb: 1,
             }}
           >
-            {/* Update todo's */}
+            {/* Update todos */}
             {formValue.editIndex === item.id ? (
               <Box
-                sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: '100%',
+                }}
               >
                 <TextField
                   size='small'
                   variant='outlined'
                   value={formValue.editedTask}
-                  sx={{ flexGrow: 1, mr: 2, mb: 1, width: '30rem  ' }}
+                  sx={{ mb: 1 }}
                   onChange={(e) =>
                     setFormValue((prev) => ({
                       ...prev,
@@ -91,12 +156,12 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                   variant='outlined'
                   multiline
                   maxRows={4}
-                  value={formValue.editedDes}
-                  sx={{ marginRight: 2, mb: 2, width: '30rem' }}
+                  value={formValue.editedDesc}
+                  sx={{ mb: 2 }}
                   onChange={(e) =>
                     setFormValue((prev) => ({
                       ...prev,
-                      editedDes: e.target.value,
+                      editedDesc: e.target.value,
                     }))
                   }
                 />
@@ -115,25 +180,26 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     width: '100%',
+                    flexWrap: 'wrap',
+                    gap: 1,
                   }}
                 >
                   <Typography
                     variant='body1'
                     sx={{
                       fontWeight: 'bold',
-                      fontSize: '1.4rem',
-                      textDecoration: completedTask[item.id]
-                        ? 'line-through'
-                        : 'none',
+                      fontSize: { xs: '1.1rem', sm: '1.4rem' },
+                      textDecoration:
+                        item.status === 'COMPLETED' ? 'line-through' : 'none',
                     }}
                   >
-                    {item.text}
+                    {item.title}
                   </Typography>
 
-                  <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button
                       onClick={() =>
-                        onClickEdit(item.id, item.text, item.description)
+                        onClickEdit(item.id, item.title, item.description)
                       }
                     >
                       <EditRoundedIcon />
@@ -155,32 +221,39 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     variant='caption'
                     sx={{
                       fontSize: '1rem',
-                      textDecoration: completedTask[item.id]
-                        ? 'line-through'
-                        : 'none',
+                      textDecoration:
+                        item.status === 'COMPLETED' ? 'line-through' : 'none',
                     }}
                   >
                     {item.description}
                   </Typography>
                 </Box>
 
-                <Divider sx={{ width: '100%', my: 0.5 }} />
+                <Divider sx={{ width: '100%', my: 1 }} />
 
-                {/* Manage todo status and Dates */}
+                {/* Manage todoStatus and Dates */}
                 <Box
                   sx={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     width: '100%',
                     alignItems: 'center',
+                    flexWrap: 'wrap',
                   }}
                 >
                   <FormControlLabel
                     label='Completed'
                     control={
                       <Checkbox
-                        checked={completedTask[item.id] || false}
-                        onChange={() => handleStatus(item.id)}
+                        checked={item.status === 'COMPLETED'}
+                        onChange={() =>
+                          handleStatusChange(
+                            item.id,
+                            item.status,
+                            item.title,
+                            item.description
+                          )
+                        }
                       />
                     }
                   />
@@ -194,9 +267,12 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                         borderRadius: '5px',
                       }}
                     >
-                      {item.currentDate.toLocaleDateString()}
+                      {item.createdDt
+                        ? new Date(item.createdDt).toLocaleDateString()
+                        : null}
                     </Typography>
-                    {item.updatedDate && (
+
+                    {item.updateDt !== item.createdDt && (
                       <Typography
                         sx={{
                           fontSize: '0.8rem',
@@ -206,7 +282,9 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                           borderRadius: '5px',
                         }}
                       >
-                        {item.updatedDate?.toLocaleDateString()}
+                        {item.updateDt
+                          ? new Date(item.updateDt).toLocaleDateString()
+                          : null}
                       </Typography>
                     )}
                   </Box>
@@ -216,7 +294,16 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
           </ListItem>
         ))}
       </List>
-      g
+
+      {/*Edit  Success Snackbar */}
+      <SnackbarAlert
+        open={snackbar.open}
+        onClose={handleCloseSnackbar}
+        severity={snackbar.severity}
+        message={snackbar.message}
+        horizontalPosition={snackbar.horizontalPosition}
+        verticalPosition={snackbar.verticalPosition}
+      />
     </Box>
   );
 };

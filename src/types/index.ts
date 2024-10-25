@@ -1,33 +1,23 @@
-// ? can be used optional chaining
-
-//Manage todo's
+//Main TodoInterface
 export interface Todo {
   id: string;
-  text: string;
+  title: string;
   description: string;
-  currentDate: Date;
-  updatedDate: Date | null;
+  status: string;
+  createdDt: Date;
+  updateDt: Date | null;
 }
 
-//add todo data
-export interface TodoAddHandler {
-  (
-    text: string,
-    description: string,
-    date: Date,
-    updatedDate: Date | null
-  ): void;
-}
+//add data
+export type TodoAddHandler = (title: string, description: string) => void;
 
-//edit todo
-export interface TodoEditHandler {
-  (
-    id: string,
-    editedTask: string,
-    editedDes: string,
-    updatedDT: Date | null
-  ): void;
-}
+//edit
+export type TodoEditHandler = (
+  id: string,
+  editedTask: string,
+  editedDesc: string
+  // updateDt: Date | null
+) => void;
 
 //TodoPage
 export interface TodoPageProps {
@@ -37,31 +27,29 @@ export interface TodoPageProps {
   todos: Todo[];
 }
 
-//add todo  handler functionality
+//todoForm Add TodoHandler functionality
 export interface OnAddTodo {
-  handler: (
-    text: string,
-    Des: string,
-    date: Date,
-    updatedDT: Date | null
-  ) => void;
+  handler: (title: string, Desc: string) => void;
 }
 
 //TodoList
+interface Items {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  createdDt: Date;
+  updateDt: Date | null;
+}
+
 export interface TodoListProps {
-  items: {
-    id: string;
-    text: string;
-    description: string;
-    currentDate: Date;
-    updatedDate: Date | null;
-  }[]; // array of objects
+  items: Items[]; // array of objects
   onDeleteTodos: (id: string) => void;
   handleEdit: (
     id: string,
     editedTask: string,
-    editedDes: string,
-    updatedDT: Date | null
+    editedDesc: string
+    // updateDt: Date | null
   ) => void;
 }
 
@@ -92,6 +80,49 @@ export interface Api {
   id: string;
   title: string;
   description: string;
-  currentDate: string;
-  updateDT?: string;
+  createdDt: string;
+  updateDt?: string;
+}
+
+// Profile-view
+export interface ProfileViewProps {
+  userData: {
+    name: string;
+    email: string;
+    picture: string;
+  };
+  anchorEl: HTMLElement | null;
+  open: boolean;
+  handleClose: () => void;
+  handleLogout: () => void;
+}
+
+//Error dialog
+export interface ErrorDialogProps {
+  open: boolean;
+  message: string;
+  onClose: () => void;
+}
+
+//todoform-input
+export interface TodoFormInputs {
+  enteredText: string;
+  enteredDescription: string;
+}
+
+//user-context
+export interface UserContextType {
+  authenticated: boolean;
+  token: string | null;
+  setAuthenticated: (value: boolean) => void;
+  setToken: (token: string | null) => void;
+}
+
+//Snackbar
+export interface SnackBar {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error';
+  horizontalPosition: 'center' | 'left' | 'right';
+  verticalPosition: 'top' | 'bottom';
 }

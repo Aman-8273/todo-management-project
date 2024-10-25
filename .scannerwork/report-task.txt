@@ -1,0 +1,6 @@
+projectKey=todo-management
+serverUrl=http://localhost:9000
+serverVersion=10.7.0.96327
+dashboardUrl=http://localhost:9000/dashboard?id=todo-management
+ceTaskId=c9c23830-256d-4f2a-98d5-d6b882976a42
+ceTaskUrl=http://localhost:9000/api/ce/task?id=c9c23830-256d-4f2a-98d5-d6b882976a42

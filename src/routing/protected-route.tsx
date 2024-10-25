@@ -1,10 +1,13 @@
 import { Navigate, Outlet } from 'react-router-dom';
 
-export default function ProtectedRoute() {
+const ProtectedRoute = () => {
+  //Getting token from localStorage
   const token = localStorage.getItem('token');
 
   if (!token) {
     return <Navigate to='/' />;
   }
   return <Outlet />;
-}
+};
+
+export default ProtectedRoute;
