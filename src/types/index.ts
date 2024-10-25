@@ -9,18 +9,14 @@ export interface Todo {
 }
 
 //add data
-export type TodoAddHandler = (
-  title: string,
-  description: string,
-  date: Date
-) => void;
+export type TodoAddHandler = (title: string, description: string) => void;
 
 //edit
 export type TodoEditHandler = (
   id: string,
   editedTask: string,
-  editedDesc: string,
-  updateDt: Date | null
+  editedDesc: string
+  // updateDt: Date | null
 ) => void;
 
 //TodoPage
@@ -33,7 +29,7 @@ export interface TodoPageProps {
 
 //todoForm Add TodoHandler functionality
 export interface OnAddTodo {
-  handler: (title: string, Desc: string, date: Date) => void;
+  handler: (title: string, Desc: string) => void;
 }
 
 //TodoList
@@ -52,8 +48,8 @@ export interface TodoListProps {
   handleEdit: (
     id: string,
     editedTask: string,
-    editedDesc: string,
-    updateDt: Date | null
+    editedDesc: string
+    // updateDt: Date | null
   ) => void;
 }
 
@@ -106,4 +102,27 @@ export interface ErrorDialogProps {
   open: boolean;
   message: string;
   onClose: () => void;
+}
+
+//todoform-input
+export interface TodoFormInputs {
+  enteredText: string;
+  enteredDescription: string;
+}
+
+//user-context
+export interface UserContextType {
+  authenticated: boolean;
+  token: string | null;
+  setAuthenticated: (value: boolean) => void;
+  setToken: (token: string | null) => void;
+}
+
+//Snackbar
+export interface SnackBar {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error';
+  horizontalPosition: 'center' | 'left' | 'right';
+  verticalPosition: 'top' | 'bottom';
 }

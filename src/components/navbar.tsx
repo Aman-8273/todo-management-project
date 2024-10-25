@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserData } from '../types';
+import { UserData, SnackBar } from '../types';
 import {
   AppBar,
   Toolbar,
@@ -11,9 +11,19 @@ import {
 } from '@mui/material';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import ProfileView from './profile-view';
+import SnackbarAlert from '../snackbar';
 
 const Header = () => {
   const navigate = useNavigate();
+
+  //Setting snackbar
+  const [snackbar, setSnackbar] = useState<SnackBar>({
+    open: false,
+    message: '',
+    severity: 'success',
+    horizontalPosition: 'center',
+    verticalPosition: 'top',
+  });
 
   //Managing user authentication
   const [authenticated, setAuthenticated] = useState<boolean>(false);
@@ -35,10 +45,23 @@ const Header = () => {
     setAuthenticated(storedUser);
   }, [storedUser]);
 
+  //Close snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   //Handle on logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.setItem('authenticate', JSON.stringify(false));
+    //Show success snackbar
+    setSnackbar({
+      open: true,
+      message: 'Logout successfully!',
+      severity: 'success',
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+    });
     setAuthenticated(false);
     handleClose();
     navigate('/');
@@ -85,6 +108,16 @@ const Header = () => {
               />
             </Box>
           )}
+
+          {/* Logout snackbar */}
+          <SnackbarAlert
+            open={snackbar.open}
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            message={snackbar.message}
+            horizontalPosition={snackbar.horizontalPosition}
+            verticalPosition={snackbar.verticalPosition}
+          />
         </Toolbar>
       </AppBar>
     </Box>

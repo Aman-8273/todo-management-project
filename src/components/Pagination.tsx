@@ -48,7 +48,7 @@ const TodoPagination = ({
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: '20px',
-        ml: '55rem',
+        ml: '40rem',
       }}
     >
       <Button

@@ -1,9 +1,16 @@
 import { gql } from '@apollo/client';
 
+//Get users
+export const GET_USER_LIST = gql`
+  query GetAllowListByUsers {
+    getAllowListByUsers
+  }
+`;
+
 // For fetching todos
 export const GET_TODOS = gql`
-  query GetAllTodos($email: String!) {
-    getAllTodos(email: $email) {
+  query GetAllTodos {
+    getAllTodos {
       id
       title
       description
@@ -17,7 +24,7 @@ export const GET_TODOS = gql`
 
 // Mutation for create or update
 export const CREATE_OR_UPDATE_TODO = gql`
-  mutation CreateOrUpdateTodo($input: TodoInput!) {
+  mutation ($input: TodoInput!) {
     createOrUpdateTodo(input: $input) {
       id
       title

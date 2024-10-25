@@ -8,27 +8,30 @@ import Header from './components/navbar';
 import Home from './components/Home';
 import TodoPage from './components/TodoPage';
 import ProtectedRoute from './routing/protected-route';
+import UserProvider from './context/user-context.tsx';
 
 const App = () => {
   return (
     <Router>
-      <Header />
-      <Routes>
-        <Route
-          path='/'
-          element={<Home />}
-        />
-        <Route element={<ProtectedRoute />}>
+      <UserProvider>
+        <Header />
+        <Routes>
           <Route
-            path='/todo'
-            element={<TodoPage />}
+            path='/'
+            element={<Home />}
           />
-        </Route>
-        <Route
-          path='*'
-          element={<Navigate to='/' />}
-        />{' '}
-      </Routes>
+          <Route element={<ProtectedRoute />}>
+            <Route
+              path='/todo'
+              element={<TodoPage />}
+            />
+          </Route>
+          <Route
+            path='*'
+            element={<Navigate to='/' />}
+          />
+        </Routes>
+      </UserProvider>
     </Router>
   );
 };

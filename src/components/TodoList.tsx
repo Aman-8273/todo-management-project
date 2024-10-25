@@ -10,16 +10,22 @@ import {
   FormControlLabel,
   Divider,
 } from '@mui/material';
-import { TodoListProps } from '../types';
+import { TodoListProps, SnackBar } from '../types';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import { useMutation, useQuery } from '@apollo/client';
+import SnackbarAlert from '../snackbar';
 import { CREATE_OR_UPDATE_TODO, GET_TODOS } from '../queries';
 
 const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
-  //Getting token from localStorage and fetch email from it
-  const token = localStorage.getItem('token');
-  const emailData = token ? JSON.parse(token) : null;
+  //Snackbar for success
+  const [snackbar, setSnackbar] = useState<SnackBar>({
+    open: false,
+    message: '',
+    severity: 'success',
+    horizontalPosition: 'center',
+    verticalPosition: 'top',
+  });
 
   //Manage Form data
   const initialValue = {
@@ -35,6 +41,11 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
   });
 
   const [updateStatus] = useMutation(CREATE_OR_UPDATE_TODO);
+
+  //Close snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   //Managing status (completed or pending)
   const handleStatusChange = async (
@@ -55,7 +66,6 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
           input: {
             id,
             status: newStatus,
-            email: emailData.email,
             title,
             description,
           },
@@ -82,22 +92,32 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
 
   //handling TodoSave functionality
   const handleSave = async (id: string) => {
-    const updatedDt = new Date();
-
-    handleEdit(id, formValue.editedTask, formValue.editedDesc, updatedDt);
+    handleEdit(id, formValue.editedTask, formValue.editedDesc);
     setFormValue(initialValue);
+
+    //Sucess message on Edit
+    setSnackbar({
+      open: true,
+      message: 'Todo Edit Successfully!',
+      severity: 'success',
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+    });
   };
 
-  //sort todos by date (return positive = swap, negative = same order, 0 = same order)
-  const sortedItems = [...items].sort(
-    (a, b) => new Date(b.createdDt).getTime() - new Date(a.createdDt).getTime()
-  ); // Turn your strings into dates, and convert time into miliseconds
-
   return (
-    <Box sx={{ display: 'flex', px: 2, maxWidth: '100vh', margin: '5px auto' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        px: { xs: 1, sm: 2 },
+        width: '100%',
+        margin: '5px auto',
+      }}
+    >
       {/* todoTask-list */}
-      <List>
-        {sortedItems.map((item) => (
+      <List sx={{ width: '100%', maxWidth: '1200px', mx: 'auto' }}>
+        {items.map((item) => (
           <ListItem
             key={item.id}
             sx={{
@@ -106,20 +126,24 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
               boxShadow: '-2px 3px 7px 0px rgba(179,175,179,1)',
               borderRadius: '10px',
               px: 2,
-              width: '95vh',
+              width: '100%',
               mb: 1,
             }}
           >
             {/* Update todos */}
             {formValue.editIndex === item.id ? (
               <Box
-                sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: '100%',
+                }}
               >
                 <TextField
                   size='small'
                   variant='outlined'
                   value={formValue.editedTask}
-                  sx={{ flexGrow: 1, mr: 2, mb: 1, width: '30rem  ' }}
+                  sx={{ mb: 1 }}
                   onChange={(e) =>
                     setFormValue((prev) => ({
                       ...prev,
@@ -133,7 +157,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                   multiline
                   maxRows={4}
                   value={formValue.editedDesc}
-                  sx={{ marginRight: 2, mb: 2, width: '30rem' }}
+                  sx={{ mb: 2 }}
                   onChange={(e) =>
                     setFormValue((prev) => ({
                       ...prev,
@@ -156,13 +180,15 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     width: '100%',
+                    flexWrap: 'wrap',
+                    gap: 1,
                   }}
                 >
                   <Typography
                     variant='body1'
                     sx={{
                       fontWeight: 'bold',
-                      fontSize: '1.4rem',
+                      fontSize: { xs: '1.1rem', sm: '1.4rem' },
                       textDecoration:
                         item.status === 'COMPLETED' ? 'line-through' : 'none',
                     }}
@@ -170,7 +196,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     {item.title}
                   </Typography>
 
-                  <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button
                       onClick={() =>
                         onClickEdit(item.id, item.title, item.description)
@@ -203,7 +229,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                   </Typography>
                 </Box>
 
-                <Divider sx={{ width: '100%', my: 0.5 }} />
+                <Divider sx={{ width: '100%', my: 1 }} />
 
                 {/* Manage todoStatus and Dates */}
                 <Box
@@ -212,6 +238,7 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
                     justifyContent: 'space-between',
                     width: '100%',
                     alignItems: 'center',
+                    flexWrap: 'wrap',
                   }}
                 >
                   <FormControlLabel
@@ -267,6 +294,16 @@ const TodoList = ({ items, onDeleteTodos, handleEdit }: TodoListProps) => {
           </ListItem>
         ))}
       </List>
+
+      {/*Edit  Success Snackbar */}
+      <SnackbarAlert
+        open={snackbar.open}
+        onClose={handleCloseSnackbar}
+        severity={snackbar.severity}
+        message={snackbar.message}
+        horizontalPosition={snackbar.horizontalPosition}
+        verticalPosition={snackbar.verticalPosition}
+      />
     </Box>
   );
 };

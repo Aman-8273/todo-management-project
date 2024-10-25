@@ -1,35 +1,48 @@
-import React, { useRef, useState } from 'react';
+import { useState } from 'react';
 import AddTaskRoundedIcon from '@mui/icons-material/AddTaskRounded';
 import { Box, Button, Container, FormControl, TextField } from '@mui/material';
-import { OnAddTodo } from '../types';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import { OnAddTodo, SnackBar } from '../types';
 import ErrorDialog from './error-dialog';
+import { TodoFormInputs } from '../types/index.ts';
+import SnackbarAlert from '../snackbar/index.tsx';
 
 const NewTodo = ({ handler }: OnAddTodo) => {
-  //Managing input fields
-  const InputRef = useRef<HTMLInputElement>(null);
-  const DesInputRef = useRef<HTMLInputElement>(null);
+  //Setting snackbar
+  const [snackbar, setSnackbar] = useState<SnackBar>({
+    open: false,
+    message: '',
+    severity: 'success',
+    horizontalPosition: 'center',
+    verticalPosition: 'top',
+  });
 
-  //Handling Error
+  //React hook form
+  const {
+    control, //Tracking data and stop re-rendering
+    handleSubmit, //Pass the form data to other function
+    reset, //Reset the form
+    formState: { errors }, //Handling error
+  } = useForm<TodoFormInputs>({
+    defaultValues: { enteredText: '', enteredDescription: '' },
+  });
+
   const [open, setOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  //Close error dialog box
-  const handleClose = () => {
-    setOpen(false);
+  //Close Error dialog box
+  const handleClose = () => setOpen(false);
+
+  //Close snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
-  // AddTodo handler
-  const onAddTodo = (event: React.FormEvent) => {
-    event.preventDefault();
+  const onAddTodo: SubmitHandler<TodoFormInputs> = (data) => {
+    //Getting title & description
+    console.log(data);
+    const { enteredText, enteredDescription } = data;
 
-    //Setting current date to todos
-    const currentDate = new Date();
-
-    //Getting title & description information
-    const enteredText = InputRef.current!.value;
-    const enteredDescription = DesInputRef.current!.value;
-
-    //Managing the errors
     switch (true) {
       case enteredText === '' || enteredDescription === '':
         setErrorMessage('Please fill out both of the fields!');
@@ -47,10 +60,17 @@ const NewTodo = ({ handler }: OnAddTodo) => {
         break;
 
       default:
-        handler(enteredText, enteredDescription, currentDate);
+        handler(enteredText, enteredDescription);
+        reset();
 
-        InputRef.current!.value = '';
-        DesInputRef.current!.value = '';
+        //Show success snackbar
+        setSnackbar({
+          open: true,
+          message: 'Todo added successfully!',
+          severity: 'success',
+          horizontalPosition: 'left',
+          verticalPosition: 'bottom',
+        });
         break;
     }
   };
@@ -60,31 +80,47 @@ const NewTodo = ({ handler }: OnAddTodo) => {
       maxWidth='lg'
       sx={{ mt: 2 }}
     >
-      {/* todoform */}
-      <Box sx={{ width: '35rem' }}>
-        <form onSubmit={onAddTodo}>
+      <Box sx={{ width: { xs: '19rem', md: '35rem' } }}>
+        <form onSubmit={handleSubmit(onAddTodo)}>
           <Box sx={{ mb: 2 }}>
             <FormControl
               fullWidth
               sx={{ mb: 2 }}
             >
-              <TextField
-                size='small'
-                label='Title'
-                fullWidth
-                inputRef={InputRef}
+              <Controller
+                name='enteredText'
+                control={control}
+                rules={{ required: 'Title is required', maxLength: 40 }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    size='small'
+                    label='Title'
+                    error={!!errors.enteredText}
+                    helperText={errors.enteredText?.message}
+                  />
+                )}
               />
             </FormControl>
+
             <FormControl
               sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end' }}
             >
-              <TextField
-                size='small'
-                label='Description'
-                multiline
-                rows={4}
-                fullWidth
-                inputRef={DesInputRef}
+              <Controller
+                name='enteredDescription'
+                control={control}
+                rules={{ required: 'Description is required', maxLength: 250 }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    size='small'
+                    label='Description'
+                    multiline
+                    rows={4}
+                    error={!!errors.enteredDescription}
+                    helperText={errors.enteredDescription?.message}
+                  />
+                )}
               />
             </FormControl>
           </Box>
@@ -100,7 +136,15 @@ const NewTodo = ({ handler }: OnAddTodo) => {
         </form>
       </Box>
 
-      {/* Error handling */}
+      <SnackbarAlert
+        open={snackbar.open}
+        onClose={handleCloseSnackbar}
+        severity={snackbar.severity}
+        message={snackbar.message}
+        horizontalPosition={snackbar.horizontalPosition}
+        verticalPosition={snackbar.verticalPosition}
+      />
+
       <ErrorDialog
         open={open}
         message={errorMessage}

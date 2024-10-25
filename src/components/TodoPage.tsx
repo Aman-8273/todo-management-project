@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Box, Container } from '@mui/material';
 import NewTodo from './todo-form';
 import TodoList from '../components/TodoList';
-import { Todo, TodoAddHandler, TodoEditHandler } from '../types';
+import { Todo, TodoAddHandler, TodoEditHandler, SnackBar } from '../types';
 import TodoPagination from './Pagination';
+import SnackbarAlert from '../snackbar';
 
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_TODOS, CREATE_OR_UPDATE_TODO, DELETE_TODO } from '../queries';
@@ -12,6 +13,20 @@ const TodoPage = () => {
   // Managing addTodos
   const [addTodo, setAddTodo] = useState<Todo[]>([]);
 
+  //Setting snackbar
+  const [snackbar, setSnackbar] = useState<SnackBar>({
+    open: false,
+    message: '',
+    severity: 'success',
+    horizontalPosition: 'center',
+    verticalPosition: 'top',
+  });
+
+  //Close snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   //Handling pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [TodosPerPage] = useState<number>(4);
@@ -19,19 +34,19 @@ const TodoPage = () => {
   const [createOrUpdateTodo] = useMutation(CREATE_OR_UPDATE_TODO);
   const [deleteTodo] = useMutation(DELETE_TODO);
 
-  //Getting token from localStorage and fetch email from it
-  const token = localStorage.getItem('token');
-  const emailData = token ? JSON.parse(token) : null;
-
   //Fetching data from api
-  const { data, loading, error, refetch } = useQuery(GET_TODOS, {
-    variables: { email: emailData.email },
-  });
+  const { data, loading, error, refetch } = useQuery(GET_TODOS);
 
   //Handling pagination starting index, last index and shows the todos
   const indexOfLastTodo = currentPage * TodosPerPage;
   const indexOfFirstTodo = indexOfLastTodo - TodosPerPage;
-  const currentTodos = addTodo.slice(indexOfFirstTodo, indexOfLastTodo);
+
+  //sort todos by date (return positive = swap, negative = same order, 0 = same order)
+  const sortedItems = [...(addTodo || [])].sort(
+    (a, b) => new Date(b.createdDt).getTime() - new Date(a.createdDt).getTime()
+  ); // Turn your strings into dates, and convert time into miliseconds
+
+  const currentTodos = sortedItems.slice(indexOfFirstTodo, indexOfLastTodo);
 
   //Setting api data to state
   useEffect(() => {
@@ -41,16 +56,14 @@ const TodoPage = () => {
   }, [data]);
 
   //Add new tasks
-  const todoAddHandler: TodoAddHandler = (title, Desc, date) => {
+  const todoAddHandler: TodoAddHandler = (title, Desc) => {
     (async () => {
       try {
         await createOrUpdateTodo({
           variables: {
             input: {
-              email: emailData.email,
-              title,
+              title: title,
               description: Desc,
-              createdDt: date,
               status: 'PENDING',
             },
           },
@@ -63,22 +76,15 @@ const TodoPage = () => {
   };
 
   //Edit Todotasks
-  const handleEdit: TodoEditHandler = (
-    id,
-    editedTask,
-    editedDesc,
-    updateDt
-  ) => {
+  const handleEdit: TodoEditHandler = (id, editedTask, editedDesc) => {
     (async () => {
       try {
         await createOrUpdateTodo({
           variables: {
             input: {
               id,
-              email: emailData.email,
               title: editedTask,
               description: editedDesc,
-              updateDt,
             },
           },
         });
@@ -103,6 +109,15 @@ const TodoPage = () => {
         if (filteredTodos) {
           setAddTodo(filteredTodos);
         }
+
+        //Show delete success snackbar
+        setSnackbar({
+          open: true,
+          message: 'Todo deleted successfully!',
+          severity: 'success',
+          horizontalPosition: 'right',
+          verticalPosition: 'bottom',
+        });
       } catch (err) {
         console.error('Error deleting todo:', err);
       }
@@ -115,14 +130,15 @@ const TodoPage = () => {
   return (
     <Container
       maxWidth='lg'
-      sx={{ mt: 4, ml: 8 }}
+      sx={{ mt: 4, ml: { xs: 0, md: 8 } }}
     >
       {/* todoform */}
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          gap: 4,
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: '2rem', md: '4rem' },
         }}
       >
         <Box sx={{ flex: 1 }}>
@@ -137,11 +153,21 @@ const TodoPage = () => {
             handleEdit={handleEdit}
           />
         </Box>
+
+        {/* Delete message */}
+        <SnackbarAlert
+          open={snackbar.open}
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          message={snackbar.message}
+          verticalPosition={snackbar.verticalPosition}
+          horizontalPosition={snackbar.horizontalPosition}
+        />
       </Box>
 
       {/* Pagination */}
       <TodoPagination
-        totalTodos={addTodo.length}
+        totalTodos={addTodo.length || 0}
         perPageTodos={TodosPerPage}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
